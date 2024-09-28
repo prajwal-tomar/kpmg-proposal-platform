@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PlusIcon, FilterIcon, CheckIcon, ClockIcon, AlertTriangleIcon } from 'lucide-react'
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'
+import { ProposalDetailModal } from './proposal-detail-modal'
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -24,9 +25,14 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 interface Proposal {
   id: string;
   title: string;
+  description: string;
   skills: string[];
+  domains: string[];
   deadline: string;
+  tasks: string[];
+  created_at: string;
   status: string;
+  contributor_id: string;
 }
 
 interface Contributor {
@@ -39,6 +45,8 @@ interface Contributor {
 export function ProposalCoordinatorDashboardComponent() {
   const [filter, setFilter] = useState("all")
   const [proposals, setProposals] = useState<Proposal[]>([])
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     fetchProposals()
@@ -47,7 +55,7 @@ export function ProposalCoordinatorDashboardComponent() {
   async function fetchProposals() {
     const { data, error } = await supabase
       .from('proposals')
-      .select('id, title, skills, deadline, status')
+      .select('*')
     
     if (error) {
       console.error('Error fetching proposals:', error)
@@ -59,6 +67,11 @@ export function ProposalCoordinatorDashboardComponent() {
   const filteredProposals = filter === "all" 
     ? proposals 
     : proposals.filter(proposal => proposal.skills.includes(filter))
+
+  const handleProposalClick = (proposal: Proposal) => {
+    setSelectedProposal(proposal)
+    setIsModalOpen(true)
+  }
 
   const contributors: Contributor[] = [
     { id: 1, name: "Alice Johnson", avatar: "/placeholder.svg?height=40&width=40", skillset: "Finance" },
@@ -137,24 +150,26 @@ export function ProposalCoordinatorDashboardComponent() {
           </TableHeader>
           <TableBody>
             {filteredProposals.map((proposal) => (
-              <Link key={proposal.id} href={`/proposal-detail/${proposal.id}`} passHref legacyBehavior>
-                <TableRow className="cursor-pointer hover:bg-gray-100 transition-colors">
-                  <TableCell className="font-medium">{proposal.title}</TableCell>
-                  <TableCell>{proposal.skills.join(', ')}</TableCell>
-                  <TableCell>{new Date(proposal.deadline).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        proposal.status === "completed" ? "bg-[#00A3A1]" :
-                        proposal.status === "available" ? "bg-[#0091DA]" :
-                        "bg-[#483698]"
-                      }
-                    >
-                      {proposal.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              </Link>
+              <TableRow 
+                key={proposal.id} 
+                className="cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => handleProposalClick(proposal)}
+              >
+                <TableCell className="font-medium">{proposal.title}</TableCell>
+                <TableCell>{proposal.skills.join(', ')}</TableCell>
+                <TableCell>{new Date(proposal.deadline).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <Badge
+                    className={
+                      proposal.status === "submitted" ? "bg-[#00A3A1]" :
+                      proposal.status === "accepted" ? "bg-[#0091DA]" :
+                      "bg-[#483698]"
+                    }
+                  >
+                    {proposal.status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
@@ -181,6 +196,11 @@ export function ProposalCoordinatorDashboardComponent() {
       </div>
       </div>
       
+      <ProposalDetailModal 
+        proposal={selectedProposal}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   )
 }
