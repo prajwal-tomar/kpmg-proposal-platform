@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AdminSettingsScreen: React.FC = () => {
   const [users, setUsers] = useState([
@@ -14,13 +16,34 @@ const AdminSettingsScreen: React.FC = () => {
     { id: 2, name: 'Market Research', description: 'Perform in-depth market research and analysis' },
   ]);
 
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Contributor' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'contributor', password: '' });
   const [newTemplate, setNewTemplate] = useState({ name: '', description: '' });
 
-  const addUser = () => {
-    if (newUser.name && newUser.email) {
-      setUsers([...users, { ...newUser, id: users.length + 1 }]);
-      setNewUser({ name: '', email: '', role: 'Contributor' });
+  const addUser = async () => {
+    if (newUser.name && newUser.email && newUser.password) {
+      try {
+        const response = await fetch('/api/create-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newUser),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create user');
+        }
+
+        const createdUser = await response.json();
+        setUsers([...users, createdUser]);
+        setNewUser({ name: '', email: '', role: 'contributor', password: '' });
+        toast.success('User added successfully!');
+      } catch (error) {
+        console.error('Error creating user:', error);
+        toast.error('Failed to create user. Please try again.');
+      }
+    } else {
+      toast.warn('Please fill in all required fields.');
     }
   };
 
@@ -28,11 +51,15 @@ const AdminSettingsScreen: React.FC = () => {
     if (newTemplate.name && newTemplate.description) {
       setTaskTemplates([...taskTemplates, { ...newTemplate, id: taskTemplates.length + 1 }]);
       setNewTemplate({ name: '', description: '' });
+      toast.success('Template added successfully!');
+    } else {
+      toast.warn('Please fill in all template fields.');
     }
   };
 
   return (
     <div className="bg-gray-100 min-h-screen p-8">
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         <header className="bg-[#00338D] text-white p-6">
           <h1 className="text-2xl font-bold">Admin Settings</h1>
@@ -41,7 +68,7 @@ const AdminSettingsScreen: React.FC = () => {
         <div className="p-6">
           <section className="mb-12">
             <h2 className="text-xl font-semibold mb-4 text-[#00338D]">User Management</h2>
-            <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
               <input
                 type="text"
                 placeholder="Name"
@@ -56,13 +83,21 @@ const AdminSettingsScreen: React.FC = () => {
                 value={newUser.email}
                 onChange={(e) => setNewUser({...newUser, email: e.target.value})}
               />
+              <input
+                type="password"
+                placeholder="Password"
+                className="border-gray-300 rounded-md shadow-sm p-1"
+                value={newUser.password}
+                onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+              />
               <select
                 className="border-gray-300 rounded-md shadow-sm"
                 value={newUser.role}
                 onChange={(e) => setNewUser({...newUser, role: e.target.value})}
               >
-                <option value="Contributor">Contributor</option>
-                <option value="Proposal Coordinator">Proposal Coordinator</option>
+                <option value="contributor">Contributor</option>
+                <option value="coordinator">Proposal Coordinator</option>
+                <option value="admin">Admin</option>
               </select>
               <button
                 onClick={addUser}

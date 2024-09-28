@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bell, Search, User } from 'lucide-react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 type UserRole = 'coordinator' | 'contributor';
 
@@ -37,6 +38,17 @@ const navLinks: Record<UserRole, NavLink[]> = {
 const Header = ({ userRole = 'coordinator' }: { userRole?: UserRole }) => {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error logging out:', error);
+    } else {
+      router.push('/login');
+    }
+  };
 
   return (
     <header className="bg-white shadow-md">
@@ -116,7 +128,9 @@ const Header = ({ userRole = 'coordinator' }: { userRole?: UserRole }) => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem className="text-[#6D2077]">Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="text-[#6D2077]">
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

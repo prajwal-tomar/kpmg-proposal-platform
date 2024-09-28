@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/header";
+import 'react-toastify/dist/ReactToastify.css';
+import ClientLayout from './client-layout';
 
 export const metadata: Metadata = {
   title: "KPMG Proposal Platform",
@@ -9,14 +10,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className="">
-        <Header />
-        {children}
+      <body>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
