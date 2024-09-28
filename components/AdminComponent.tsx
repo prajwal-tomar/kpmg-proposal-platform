@@ -30,17 +30,18 @@ const AdminSettingsScreen: React.FC = () => {
           body: JSON.stringify(newUser),
         });
 
+        const result = await response.json();
+
         if (!response.ok) {
-          throw new Error('Failed to create user');
+          throw new Error(result.error || 'Failed to create user');
         }
 
-        const createdUser = await response.json();
-        setUsers([...users, createdUser]);
+        setUsers([...users, result.user]);
         setNewUser({ name: '', email: '', role: 'contributor', password: '' });
         toast.success('User added successfully!');
       } catch (error) {
         console.error('Error creating user:', error);
-        toast.error('Failed to create user. Please try again.');
+        toast.error(`Failed to create user: ${error.message}`);
       }
     } else {
       toast.warn('Please fill in all required fields.');

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -8,39 +8,65 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SearchIcon, CheckIcon, SendIcon } from 'lucide-react'
+import { CheckIcon, SendIcon } from 'lucide-react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 
-// Define the Task interface
-interface Task {
-  id: number;
+// Update the Proposal interface to match your Supabase table structure
+interface Proposal {
+  id: string;
   title: string;
-  skillset: string;
-  domain: string;
+  description: string;
+  skills: string[];
+  domains: string[];
   deadline: string;
-  status: string;
+  tasks: Task[];
+  created_at: string;
+  status: string; // We'll add this for filtering purposes
+  contributor_id: string | null;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  skills: string[];
+  deadline: string;
+  status: 'pending' | 'in_progress' | 'completed';
 }
 
 export function ProposalContributorDashboardComponent() {
   const [filter, setFilter] = useState("all")
   const [search, setSearch] = useState("")
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
+  const [proposals, setProposals] = useState<Proposal[]>([])
 
-  const tasks: Task[] = [
-    { id: 1, title: "Financial Analysis for Tech Startup", skillset: "Finance", domain: "Technology", deadline: "2023-07-15", status: "available" },
-    { id: 2, title: "Market Research on Renewable Energy", skillset: "Research", domain: "Energy", deadline: "2023-07-20", status: "available" },
-    { id: 3, title: "Risk Assessment for Healthcare Provider", skillset: "Risk Management", domain: "Healthcare", deadline: "2023-07-18", status: "available" },
-    { id: 4, title: "Audit Planning for Manufacturing Company", skillset: "Audit", domain: "Manufacturing", deadline: "2023-07-22", status: "accepted" },
-    { id: 5, title: "Tax Strategy for Multinational Corporation", skillset: "Tax", domain: "International", deadline: "2023-07-25", status: "submitted" },
-  ]
+  const supabase = createClientComponentClient()
 
-  const filteredTasks = tasks.filter(task => 
-    (filter === "all" || task.skillset === filter) &&
-    (search === "" || task.title.toLowerCase().includes(search.toLowerCase()) || task.skillset.toLowerCase().includes(search.toLowerCase()))
+  useEffect(() => {
+    fetchProposals()
+  }, [])
+
+  async function fetchProposals() {
+    const { data, error } = await supabase
+      .from('proposals')
+      .select('*')
+    
+    if (error) {
+      console.error('Error fetching proposals:', error)
+    } else {
+      setProposals(data)
+    }
+  }
+
+  const filteredProposals = proposals.filter(proposal => 
+    (filter === "all" || proposal.skills.includes(filter)) &&
+    (search === "" || proposal.title.toLowerCase().includes(search.toLowerCase()) || proposal.skills.some(skill => skill.toLowerCase().includes(search.toLowerCase())))
   )
 
-  const availableTasks = filteredTasks.filter(task => task.status === "available")
-  const acceptedTasks = filteredTasks.filter(task => task.status === "accepted")
-  const submittedTasks = filteredTasks.filter(task => task.status === "submitted")
+  const availableProposals = filteredProposals.filter(proposal => proposal.status === "available")
+  const acceptedProposals = filteredProposals.filter(proposal => proposal.status === "accepted")
+  const submittedProposals = filteredProposals.filter(proposal => proposal.status === "submitted")
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -54,7 +80,7 @@ export function ProposalContributorDashboardComponent() {
           <div className="flex-1">
             <Input
               type="text"
-              placeholder="Search tasks..."
+              placeholder="Search proposals..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full"
@@ -62,10 +88,11 @@ export function ProposalContributorDashboardComponent() {
           </div>
           <Select value={filter} onValueChange={setFilter}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by skillset" />
+              <SelectValue placeholder="Filter by skill" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Skillsets</SelectItem>
+              <SelectItem value="all">All Skills</SelectItem>
+              {/* You might want to dynamically populate this list based on available skills */}
               <SelectItem value="Finance">Finance</SelectItem>
               <SelectItem value="Research">Research</SelectItem>
               <SelectItem value="Risk Management">Risk Management</SelectItem>
@@ -77,66 +104,70 @@ export function ProposalContributorDashboardComponent() {
 
         <Tabs defaultValue="available">
           <TabsList className="mb-4">
-            <TabsTrigger value="available">Available Tasks</TabsTrigger>
-            <TabsTrigger value="accepted">Accepted Tasks</TabsTrigger>
-            <TabsTrigger value="submitted">Submitted Tasks</TabsTrigger>
+            <TabsTrigger value="available">Available Proposals</TabsTrigger>
+            <TabsTrigger value="accepted">Accepted Proposals</TabsTrigger>
+            <TabsTrigger value="submitted">Submitted Proposals</TabsTrigger>
           </TabsList>
           <TabsContent value="available">
-            <TaskTable tasks={availableTasks} onSelectTask={setSelectedTask} />
+            <ProposalTable proposals={availableProposals} onSelectProposal={setSelectedProposal} />
           </TabsContent>
           <TabsContent value="accepted">
-            <TaskTable tasks={acceptedTasks} onSelectTask={setSelectedTask} />
+            <ProposalTable proposals={acceptedProposals} onSelectProposal={setSelectedProposal} />
           </TabsContent>
           <TabsContent value="submitted">
-            <TaskTable tasks={submittedTasks} onSelectTask={setSelectedTask} />
+            <ProposalTable proposals={submittedProposals} onSelectProposal={setSelectedProposal} />
           </TabsContent>
         </Tabs>
       </div>
 
-      <TaskDetailDialog task={selectedTask} onClose={() => setSelectedTask(null)} />
+      <ProposalDetailDialog 
+        proposal={selectedProposal} 
+        onClose={() => setSelectedProposal(null)} 
+        fetchProposals={fetchProposals}  // Pass fetchProposals function
+      />
       </div>
     </div>
   )
 }
 
-interface TaskTableProps {
-  tasks: Task[];
-  onSelectTask: (task: Task) => void;
+interface ProposalTableProps {
+  proposals: Proposal[];
+  onSelectProposal: (proposal: Proposal) => void;
 }
 
-function TaskTable({ tasks, onSelectTask }: TaskTableProps) {
+function ProposalTable({ proposals, onSelectProposal }: ProposalTableProps) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Task Title</TableHead>
-          <TableHead>Skillset</TableHead>
-          <TableHead>Domain</TableHead>
+          <TableHead>Proposal Title</TableHead>
+          <TableHead>Skills</TableHead>
+          <TableHead>Domains</TableHead>
           <TableHead>Deadline</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {tasks.map((task) => (
-          <TableRow key={task.id}>
-            <TableCell className="font-medium">{task.title}</TableCell>
-            <TableCell>{task.skillset}</TableCell>
-            <TableCell>{task.domain}</TableCell>
-            <TableCell>{task.deadline}</TableCell>
+        {proposals.map((proposal) => (
+          <TableRow key={proposal.id}>
+            <TableCell className="font-medium">{proposal.title}</TableCell>
+            <TableCell>{proposal.skills.join(", ")}</TableCell>
+            <TableCell>{proposal.domains.join(", ")}</TableCell>
+            <TableCell>{new Date(proposal.deadline).toLocaleDateString()}</TableCell>
             <TableCell>
               <Badge
                 className={
-                  task.status === "available" ? "bg-[#0091DA]" :
-                  task.status === "accepted" ? "bg-[#483698]" :
+                  proposal.status === "available" ? "bg-[#0091DA]" :
+                  proposal.status === "accepted" ? "bg-[#483698]" :
                   "bg-[#00A3A1]"
                 }
               >
-                {task.status}
+                {proposal.status}
               </Badge>
             </TableCell>
             <TableCell>
-              <Button variant="outline" onClick={() => onSelectTask(task)}>View Details</Button>
+              <Button variant="outline" onClick={() => onSelectProposal(proposal)}>View Details</Button>
             </TableCell>
           </TableRow>
         ))}
@@ -145,60 +176,119 @@ function TaskTable({ tasks, onSelectTask }: TaskTableProps) {
   )
 }
 
-interface TaskDetailDialogProps {
-  task: Task | null;
+interface ProposalDetailDialogProps {
+  proposal: Proposal | null;
   onClose: () => void;
+  fetchProposals: () => Promise<void>;  // Add this line
 }
 
-function TaskDetailDialog({ task, onClose }: TaskDetailDialogProps) {
-  if (!task) return null
+function ProposalDetailDialog({ proposal, onClose, fetchProposals }: ProposalDetailDialogProps) {
+  const supabase = createClientComponentClient()
+
+  const handleAcceptProposal = async () => {
+    if (!proposal) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { error } = await supabase
+      .from('proposals')
+      .update({ status: 'accepted', contributor_id: user.id })
+      .eq('id', proposal.id)
+
+    if (error) {
+      console.error('Error accepting proposal:', error)
+      // You might want to show an error message to the user here
+    } else {
+      // Refresh the proposals list
+      await fetchProposals()
+      onClose()
+    }
+  }
+
+  if (!proposal) return null;  // Add this line to handle null proposal
+
+  let tasksArray = [];
+  try {
+    tasksArray = Array.isArray(proposal.tasks) 
+      ? proposal.tasks 
+      : (typeof proposal.tasks === 'string' ? JSON.parse(proposal.tasks) : []);
+  } catch (error) {
+    console.error('Error parsing tasks:', error);
+  }
 
   return (
-    <Dialog open={!!task} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={!!proposal} onOpenChange={() => onClose()}>
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{task.title}</DialogTitle>
-          <DialogDescription>
-            Task details and actions
+          <DialogTitle className="text-2xl font-bold text-[#00338D]">{proposal.title}</DialogTitle>
+          <DialogDescription className="text-sm text-gray-500">
+            Proposal details and actions
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <span className="font-bold">Skillset:</span>
-            <span className="col-span-3">{task.skillset}</span>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <span className="font-bold">Domain:</span>
-            <span className="col-span-3">{task.domain}</span>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <span className="font-bold">Deadline:</span>
-            <span className="col-span-3">{task.deadline}</span>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <span className="font-bold">Status:</span>
-            <span className="col-span-3">
+        <div className="mt-6 space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Skills</h3>
+              <p className="mt-1 text-sm text-gray-900">{proposal.skills.join(", ")}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Domains</h3>
+              <p className="mt-1 text-sm text-gray-900">{proposal.domains.join(", ")}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Deadline</h3>
+              <p className="mt-1 text-sm text-gray-900">{new Date(proposal.deadline).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Status</h3>
               <Badge
-                className={
-                  task.status === "available" ? "bg-[#0091DA]" :
-                  task.status === "accepted" ? "bg-[#483698]" :
+                className={`mt-1 ${
+                  proposal.status === "available" ? "bg-[#0091DA]" :
+                  proposal.status === "accepted" ? "bg-[#483698]" :
                   "bg-[#00A3A1]"
-                }
+                }`}
               >
-                {task.status}
+                {proposal.status}
               </Badge>
-            </span>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Description</h3>
+            <p className="mt-1 text-sm text-gray-900">{proposal.description}</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tasks</h3>
+            {tasksArray.length > 0 ? (
+              <div className="space-y-4">
+                {tasksArray.map((task, index) => (
+                  <Card key={index}>
+                    <CardHeader>
+                      <CardTitle className="text-md font-semibold">{task.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600">{task.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No tasks available for this proposal.</p>
+            )}
           </div>
         </div>
-        <div className="flex justify-end space-x-2">
-          {task.status === "available" && (
-            <Button className="bg-[#005EB8] hover:bg-[#00338D]">
-              <CheckIcon className="mr-2 h-4 w-4" /> Accept Task
+        <div className="mt-6 flex justify-end space-x-2">
+          {proposal.status === "available" && (
+            <Button 
+              className="bg-[#005EB8] hover:bg-[#00338D] text-white"
+              onClick={handleAcceptProposal}
+            >
+              <CheckIcon className="mr-2 h-4 w-4" /> Accept Proposal
             </Button>
           )}
-          {task.status === "accepted" && (
-            <Button className="bg-[#00A3A1] hover:bg-[#008080]">
-              <SendIcon className="mr-2 h-4 w-4" /> Submit Task
+          {proposal.status === "accepted" && (
+            <Button className="bg-[#00A3A1] hover:bg-[#008080] text-white">
+              <SendIcon className="mr-2 h-4 w-4" /> Submit Proposal
             </Button>
           )}
           <Button variant="outline" onClick={onClose}>Close</Button>

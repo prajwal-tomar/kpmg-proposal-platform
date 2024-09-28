@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import 'react-toastify/dist/ReactToastify.css';
-import ClientLayout from './client-layout';
+import { ToastContainer } from 'react-toastify';
+import Header from "@/components/header";
 
 export const metadata: Metadata = {
   title: "KPMG Proposal Platform",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ClientLayout>{children}</ClientLayout>
+        <Header />
+        {children}
+        <ToastContainer />
       </body>
     </html>
   );

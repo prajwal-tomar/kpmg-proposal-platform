@@ -1,53 +1,48 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server';
+import { db } from '@vercel/postgres';
+import bcrypt from 'bcrypt';
 
 export async function POST(request: Request) {
-    const { name, email, password, role } = await request.json();
-
-    // Create a Supabase client with the service role key
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
     try {
-        // Create the user in Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true,
-        });
+        const { name, email, role, password } = await request.json();
 
-        if (authError) throw authError;
-
-        // If user creation was successful, add the user's role to the user_roles table
-        if (authData.user) {
-            // Map the role to the correct value
-            const mappedRole = role.toLowerCase() === 'proposal coordinator' ? 'coordinator' : role.toLowerCase();
-
-            const { error: roleError } = await supabase
-                .from('user_roles')
-                .insert({ user_id: authData.user.id, role: mappedRole });
-
-            if (roleError) throw roleError;
-
-            // Add user details to a custom users table if needed
-            const { error: userError } = await supabase
-                .from('users')
-                .insert({ id: authData.user.id, name, email });
-
-            if (userError) throw userError;
+        // Validate input
+        if (!name || !email || !role || !password) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        return NextResponse.json({
-            id: authData.user.id,
-            name,
-            email,
-            role
-        }, { status: 201 });
+        const client = await db.connect();
 
+        // Check if user already exists
+        const existingUser = await client.sql`
+			SELECT * FROM users WHERE email = ${email}
+		`;
+
+        if (existingUser.rows.length > 0) {
+            return NextResponse.json({ error: 'User already exists' }, { status: 409 });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert user
+        const result = await client.sql`
+			INSERT INTO users (name, email, password)
+			VALUES (${name}, ${email}, ${hashedPassword})
+			RETURNING id, name, email
+		`;
+
+        const user = result.rows[0];
+
+        // Insert user role
+        await client.sql`
+			INSERT INTO user_roles (user_id, role)
+			VALUES (${user.id}, ${role})
+		`;
+
+        return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role } }, { status: 201 });
     } catch (error) {
         console.error('Error creating user:', error);
-        return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
