@@ -1,0 +1,88 @@
+I have the following problem statement: Preparing project proposals for prospective clients is a high-frequency, time-sensitive task at KPMG, with timelines ranging from a few days to a week. Currently, forming a team, assigning tasks, and coordinating efforts for these proposals is manual and inconsistent, leading to a concentration of these opportunities among a few employees. The proposed web-based application will democratize the process, allowing for broader participation by streamlining task assignment, broadcasting, and tracking responses. [please give me a user journey for it.]
+
+Can you help me create design principles for this website? Do note this is for KPMG, one of the big4s.
+
+Give me a demo UI walkthrough of these screens.
+
+I'm building a web-based platform that enables KPMG’s Proposal Coordinators to efficiently delegate proposal-building tasks to a broad pool of eligible employees (Proposal Contributors). The tool aims to democratize the opportunity distribution process, avoid task bottlenecks, and ensure diverse involvement by automating task assignment and communication. I need you to build the following screen.
+User Profile Screen (Contributors)
+* Purpose: Allow Contributors to manage and update their skillsets and personal details.
+* Key Elements:
+   * Skill Tags: Editable tags for skills and expertise areas.
+   * Task History: List of previously completed tasks and any feedback.
+   * Profile Info: Basic user details like name, role, department.
+[use the following color palette: Primary Colors (Blues): Use these for headers, navigation bars, CTAs (Call to Actions), and key UI elements to maintain brand identity. KPMG Blue (#00338D) should dominate primary branding areas, while the Medium Blue (#005EB8) and Light Blue (#0091DA) can be used for buttons, links, or highlights. Secondary Colors: Apply secondary colors sparingly to highlight specific sections, such as status indicators, notifications, or visual accents. Violet (#483698) and Purple (#470A68) can work well for alerts, badges, or progress bars. Green (#00A3A1) could be ideal for success states, confirmation messages, or positive actions. ]
+
+just like the above build the following screen as well:
+Admin/Settings Screen
+* Purpose: Manage global settings and permissions.
+* Key Elements:
+   * User Management: Assign roles to new users (Proposal Coordinator or Contributor).
+   * Task Template Library: Pre-defined task templates for frequently used tasks (optional).
+
+[image]
+this is the color palette of KPMG. Please extract it and create a document for this.
+
+how should the header look like? please give it's UI as well adhering to design principles.
+
+I’ll be using supabase as the backend for it and nextjs for the frontend. I have already implemented role based access control. Now I wanted to implement the Task creation flow. Can you help me with the backend for this? also give me the implementation steps without any code snippets. also, what all tables do I need in supabase for this application?
+
+Also please give me the database design for this website along with postgre scripts to create these.
+
+I want you to add supabase authentication into it. Also this platform has three roles, coordinator, contributor, and admin. Can you do role based access control such that if the user who signs in is coordinator he is taken to /coordinator-dashboard, and if the user if contributor, he is taken to /contributor-dashboard. And if the user is admin he will be taked to /admin.
+
+can you give me the script to create user_roles table in supabase? give postgres script as well as policies.
+
+can you please give me all the steps from the beginning to end for what I asked you to do?
+
+can you please go through this , and implement the following feature: This component should make an API call to a server-side function that creates a new user in Supabase and assigns a role. Also create the API route as app/api/create-user/route.ts to handle user creation on the server-side.
+
+Got the following error: Cannot find module '@supabase/auth-helpers-nextjs' or its corresponding type declarations.
+
+Ensure that your Supabase project settings allow for user creation via API. [how to check this?]
+
+when the user is added successfully, use react-toast to show this message. Use react toast for showing error, success, everything.
+
+I got this error when i tried creating the user. pls fix.
+
+on this screen when I try to login i get the following error: GET https://lowokxecakhambqlmmdi.supabase.co/rest/v1/user_roles?select=role&user_id=eq.f02f98cc-0e1c-46aa-8349-c929b27f1a22 500 (Internal Server Error) why? please fix.
+
+can you please implement the logout functionality on this header? When someone clicks on the logout button, he should be redirected to /login.
+
+please edit this file to call for supabase client by getting URL from .env.local file.
+
+i tried adding a user via this UI and I was able to add him successfully and also got him added to the user_role table but still I got the above error. I want you to fix this error ASAP.
+
+in this screen when the user clicks on broadcast proposal, I want you to console log all the tasks.
+
+okay so the UI for this is looking good. Right now when i click on broadcast proposal it just consol logs all the data. Now instead of this, i want to integrate with supabase. Please implement this workflow such that when the user clicks on Broadcast proposal, all the data is then saved to a table in supabase. ALso give me the script for creating this table and also other things neccessary for this to work.
+
+Okay cool so i was able to broadcast successfully. I even was able to save to the database. Can you use react-toast library to show message on the screen? thank you.
+
+got the following error: Unhandled Runtime Error
+TypeError: toast.error is not a function
+
+Source
+components/task-creation-coordinator.tsx (84:13) @ error
+
+  82 |     } catch (error) {
+  83 |       console.error('Error broadcasting proposal:', error)
+> 84 |       toast.error("There was an error saving your proposal. Please try again.", {
+     |             ^
+  85 |         position: "top-right",
+  86 |         autoClose: 5000,
+  87 |         hideProgressBar: false,
+
+Okay so now what i wanna do is, once proposal is broadcasted, I want you to send notification to all the user who's role in the user_roles table is "contributor".  I want to implement this using supabase. what is the best way of doing this?
+
+Error broadcasting proposal: tried to subscribe multiple times. 'subscribe' can only be called a single time per channel instance
+handleBroadcast	@	task-creation-coordinator.tsx:119
+Show 17 more frames [WHY THIS ERROR?]
+
+Okay so the notifications are getting populated in the notifications table. and there is a  notifications section in header.tsx . I want you to do the following: Now, when a new proposal is broadcasted, it will trigger the database function to create notifications for all contributors. The client-side code will listen for these new notifications and can update the UI accordingly.
+
+[make sure these notifications are shown only to the users who's role is "contributor."]
+
+I want you to apply the above changes again. some error occurred and they did not get applied.
+
+in this code just like the handleAcceptProposal, i want you to create handleSubmitProposal which is triggered when a user clicks on the submit proposal button but this updated the status to submitted.your text here :)
