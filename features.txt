@@ -1,0 +1,59 @@
+1. User Authentication
+• Email and password login system • Role-based access control (Coordinator, Contributor, Admin)
+
+2. Proposal Coordinator Dashboard
+• Overview of proposal statistics (accepted, pending, overdue) • List of current proposals with filtering options • Contributor responses view
+
+3. Proposal Creation
+• Form to create new proposals with title, description, skills, domains, and deadline • Task creation within proposals • Ability to broadcast proposals to contributors
+
+4. Contributor Dashboard
+• View available, accepted, and submitted proposals • Filter proposals by skills and search functionality • Accept proposals and view task details
+
+5. My Proposals (for Contributors)
+• List of proposals the contributor has accepted or submitted • Upload response functionality for accepted proposals
+
+6. Task Management
+• Create, edit, and remove tasks within proposals • Task status tracking (pending, in-progress, completed)
+
+7. User Profile
+• Display and edit personal information • Manage skills and expertise • View task history and feedback
+
+8. Admin Settings
+• User management (add new users, assign roles) • Task template library (create and manage pre-defined task templates)
+
+9. Notifications
+• Real-time notifications for new proposals (for contributors) • Notification center in the header (for contributors)
+
+10. Header Component
+• Navigation links based on user role • Search functionality (for coordinators) • Notification bell (for contributors) • User profile dropdown with logout option
+
+11. Responsive Design
+• Mobile-friendly layout and components
+
+12. Integration with Supabase
+• Real-time data synchronization • Database operations for proposals, tasks, and users
+
+13. Toast Notifications
+• Success and error messages for user actions
+
+14. Date Handling
+• Calendar component for selecting deadlines • Formatting of dates in the UI
+
+15. File Upload
+• Ability to upload proposal responses (for contributors)
+
+16. Dynamic Routing
+• Different dashboards and pages based on user roles
+
+17. Form Validation
+• Input validation for various forms (login, proposal creation, etc.)
+
+18. Modal Dialogs
+• Detailed view of proposals and tasks
+
+19. Skill and Domain Management
+• Add and remove skills/domains for proposals and user profiles
+
+20. Status Tracking
+• Visual indicators for proposal and task statuses
