@@ -3,6 +3,7 @@ import "./globals.css";
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import Header from "@/components/header";
+import ProtectedRoute from "@/components/protected-route";
 
 export const metadata: Metadata = {
   title: "KPMG Proposal Platform",
@@ -17,9 +18,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
-        {children}
-        <ToastContainer />
+        <ProtectedRoute>
+          <Header />
+          {children}
+          <ToastContainer />
+        </ProtectedRoute>
       </body>
     </html>
   );

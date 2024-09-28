@@ -56,23 +56,20 @@ const LoginComponent = () => {
             return;
           }
 
-          let redirectPath = '/default-dashboard';
           switch (roleData?.role) {
             case 'coordinator':
-              redirectPath = '/coordinator-dashboard';
+              router.push('/coordinator-dashboard');
               break;
             case 'contributor':
-              redirectPath = '/contributor-dashboard';
+              router.push('/contributor-dashboard');
               break;
             case 'admin':
-              redirectPath = '/admin';
+              router.push('/admin');
               break;
             default:
               console.warn('Unknown user role:', roleData?.role);
+              router.push('/default-dashboard');
           }
-
-          console.log("Redirecting to:", redirectPath);
-          router.push(redirectPath);
         } catch (roleError) {
           console.error('Error in role query:', roleError);
           router.push('/default-dashboard');
